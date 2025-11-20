@@ -236,6 +236,45 @@
             transition: opacity 0.2s;
         }
 
+        /* Blitz Timer */
+        .blitz-timer-placeholder {
+            height: 125px;
+            position: relative;
+        }
+
+        .blitz-timer-container {
+            width: 67.5px;
+            height: 67.5px;
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .blitz-timer-container.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .blitz-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            width: 100%;
+            height: 100%;
+            gap: 6px;
+        }
+
+        .blitz-square {
+            background-color: var(--accent-color);
+            border-radius: 4px;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+        .blitz-square.faded { opacity: 0.2; }
+
         /* Animations */
         @keyframes shake {
             0% { transform: translateX(0); } 25% { transform: translateX(-10px); }
@@ -288,12 +327,28 @@
             </div>
 
             <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(0,0,0,0.05); text-align: center; font-size: 0.75rem; color: #999;">
-                Version 0.3.1
+                Version 0.4.1
             </div>
         </div>
     </div>
 
     <main>
+        <div class="blitz-timer-placeholder">
+            <div id="blitz-timer" class="blitz-timer-container">
+                <div class="blitz-grid">
+                    <div class="blitz-square"></div>
+                    <div class="blitz-square"></div>
+                    <div class="blitz-square"></div>
+                    <div class="blitz-square"></div>
+                    <div class="blitz-square"></div>
+                    <div class="blitz-square"></div>
+                    <div class="blitz-square"></div>
+                    <div class="blitz-square"></div>
+                    <div class="blitz-square"></div>
+                </div>
+            </div>
+        </div>
+
         <div id="question-box" class="question-container"></div>
 
         <div class="input-container">
@@ -423,13 +478,20 @@
         };
 
         // --- Config & Persistence ---
-        const defaultConfig = Object.keys(generators).reduce((acc, key) => ({...acc, [key]: true}), {});
+        const defaultConfig = {
+            ...Object.keys(generators).reduce((acc, key) => ({...acc, [key]: true}), {}),
+            blitzMode: false
+        };
         let activeConfig = JSON.parse(localStorage.getItem('etude_config')) || defaultConfig;
 
         // --- State Management ---
         const state = {
             currentQuestion: {},
-            streak: 0
+            streak: 0,
+            blitzMode: activeConfig.blitzMode || false,
+            blitzActive: false,
+            blitzTimeLeft: 9,
+            blitzInterval: null
         };
 
         const els = {
@@ -439,7 +501,8 @@
             feedback: document.getElementById('feedback'),
             container: document.getElementById('question-box'),
             modal: document.getElementById('settings-modal'),
-            toggles: document.getElementById('toggles-container')
+            toggles: document.getElementById('toggles-container'),
+            blitzTimer: document.getElementById('blitz-timer')
         };
 
         // --- UI: Menu Logic ---
@@ -461,10 +524,28 @@
                 `;
                 els.toggles.appendChild(row);
             });
+
+            // Add blitz mode toggle
+            const blitzRow = document.createElement('div');
+            blitzRow.className = 'toggle-item';
+            blitzRow.style.marginTop = '1rem';
+            blitzRow.style.paddingTop = '1rem';
+            blitzRow.style.borderTop = '1px solid rgba(0,0,0,0.05)';
+            blitzRow.innerHTML = `
+                <span class="toggle-label">Blitz Mode (9s)</span>
+                <label class="switch" onmousedown="event.preventDefault()">
+                    <input type="checkbox" id="blitz-toggle" ${activeConfig.blitzMode ? 'checked' : ''} onchange="updateConfig('blitzMode', this.checked)">
+                    <span class="slider"></span>
+                </label>
+            `;
+            els.toggles.appendChild(blitzRow);
         }
 
         window.updateConfig = (key, isChecked) => {
             activeConfig[key] = isChecked;
+            if (key === 'blitzMode') {
+                state.blitzMode = isChecked;
+            }
             localStorage.setItem('etude_config', JSON.stringify(activeConfig));
             nextQuestion();
         };
@@ -542,19 +623,77 @@
             }
         }
 
+        // Blitz Mode Functions
+        function startBlitzTimer() {
+            if (!state.blitzMode) return;
+
+            state.blitzActive = true;
+            state.blitzTimeLeft = 9;
+            els.blitzTimer.classList.add('active');
+            resetBlitzSquares();
+
+            state.blitzInterval = setInterval(() => {
+                state.blitzTimeLeft--;
+                updateBlitzSquares();
+
+                if (state.blitzTimeLeft <= 0) {
+                    stopBlitzTimer();
+                    if (state.currentQuestion && !document.body.classList.contains('success-flash')) {
+                        handleFailure(state.currentQuestion.answer);
+                    }
+                }
+            }, 1000);
+        }
+
+        function stopBlitzTimer() {
+            if (state.blitzInterval) {
+                clearInterval(state.blitzInterval);
+                state.blitzInterval = null;
+            }
+            state.blitzActive = false;
+            els.blitzTimer.classList.remove('active');
+        }
+
+        function resetBlitzSquares() {
+            const squares = els.blitzTimer.querySelectorAll('.blitz-square');
+            squares.forEach(sq => sq.classList.remove('faded'));
+        }
+
+        function updateBlitzSquares() {
+            // Clockwise perimeter then inward: [0,1,2,5,8,7,6,3] then [4] center
+            const fadeIndex = 9 - state.blitzTimeLeft;
+            const squares = els.blitzTimer.querySelectorAll('.blitz-square');
+            const fadeOrder = [0, 1, 2, 5, 8, 7, 6, 3, 4]; // Clockwise perimeter then center
+
+            if (fadeIndex > 0 && fadeIndex <= 9) {
+                squares[fadeOrder[fadeIndex - 1]].classList.add('faded');
+            }
+        }
+
         function nextQuestion() {
             state.currentQuestion = generateQuestion();
             renderQuestion(state.currentQuestion);
-            
+
             els.input.value = '';
             els.feedback.style.opacity = '0';
             els.container.classList.remove('lift-up');
             document.body.classList.remove('success-flash', 'error-flash');
-            
+
+            // Stop any running blitz timer
+            stopBlitzTimer();
+
             if (state.currentQuestion) {
                 els.input.disabled = false;
                 if (!els.modal.classList.contains('open')) {
                     els.input.focus();
+                }
+                // Start blitz timer if enabled, with 1 second delay
+                if (state.blitzMode) {
+                    setTimeout(() => {
+                        if (state.blitzMode && state.currentQuestion && !state.blitzActive) {
+                            startBlitzTimer();
+                        }
+                    }, 1000);
                 }
             } else {
                 els.input.disabled = true;
@@ -581,14 +720,16 @@
 
         function handleSuccess() {
             if (document.body.classList.contains('success-flash')) return;
+            stopBlitzTimer();
             state.streak++;
             renderStreak();
             document.body.classList.add('success-flash');
             els.container.classList.add('lift-up');
-            setTimeout(nextQuestion, 350); 
+            setTimeout(nextQuestion, 350);
         }
 
         function handleFailure(correctVal) {
+            stopBlitzTimer();
             state.streak = 0;
             renderStreak();
             
