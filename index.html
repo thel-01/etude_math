@@ -642,12 +642,27 @@
 
                 let val = els.input.value.replace(',', '.');
                 let numVal = parseFloat(val);
-                
+
                 const correct = state.currentQuestion.answer;
                 if (!isNaN(numVal) && Math.abs(numVal - correct) >= 0.001) {
                     handleFailure(correct);
                 }
             }
+        });
+
+        // Prevent scroll when keyboard appears on mobile
+        els.input.addEventListener('focus', () => {
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            const scrollPos = window.scrollY;
+            document.body.dataset.scrollPos = scrollPos;
+        });
+
+        els.input.addEventListener('blur', () => {
+            const scrollPos = parseInt(document.body.dataset.scrollPos) || 0;
+            document.body.style.position = '';
+            document.body.style.width = '';
+            window.scrollTo(0, scrollPos);
         });
 
         window.onload = () => {
