@@ -29,11 +29,15 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             font-family: var(--ui-font);
-            height: 100vh;
+            height: 100dvh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
             transition: background-color 0.4s ease;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
         }
 
         body.success-flash { background-color: var(--accent-light); }
@@ -281,6 +285,10 @@
 
             <div id="toggles-container" class="toggles-list">
                 <!-- JS Injected -->
+            </div>
+
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(0,0,0,0.05); text-align: center; font-size: 0.75rem; color: #999;">
+                Version 0.3.1
             </div>
         </div>
     </div>
@@ -634,6 +642,18 @@
             return html;
         }
 
+        // Prevent scroll on iOS when keyboard opens
+        els.input.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            // Move input far off screen, focus it, then move it back
+            // This tricks iOS into not scrolling
+            els.input.style.transform = 'translateY(-10000px)';
+            els.input.focus();
+            setTimeout(() => {
+                els.input.style.transform = 'none';
+            }, 100);
+        });
+
         // --- Initialization ---
         els.input.addEventListener('input', checkInput);
         els.input.addEventListener('keydown', (e) => {
@@ -650,20 +670,6 @@
             }
         });
 
-        // Prevent scroll when keyboard appears on mobile
-        els.input.addEventListener('focus', () => {
-            document.body.style.position = 'fixed';
-            document.body.style.width = '100%';
-            const scrollPos = window.scrollY;
-            document.body.dataset.scrollPos = scrollPos;
-        });
-
-        els.input.addEventListener('blur', () => {
-            const scrollPos = parseInt(document.body.dataset.scrollPos) || 0;
-            document.body.style.position = '';
-            document.body.style.width = '';
-            window.scrollTo(0, scrollPos);
-        });
 
         window.onload = () => {
             initMenu();
