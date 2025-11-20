@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Étude</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #FAF9F6;
+            --text-color: #1a1a1a;
+            --accent-color: #8DA399;
+            --accent-light: #DCE6E0;
+            --error-color: #C5AFA0;
+            --error-light: #F2EBE6;
+            --border-color: #dcdcdc;
+            --ui-font: 'Lato', sans-serif;
+            --math-font: 'Libre Baskerville', serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--ui-font);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: background-color 0.4s ease;
+        }
+
+        body.success-flash { background-color: var(--accent-light); }
+        body.error-flash { background-color: var(--error-light); }
+
+        /* --- Header (Grid Layout) --- */
+        header {
+            padding: 1.5rem 2rem;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            position: relative;
+            z-index: 10;
+        }
+
+        h1 {
+            font-family: var(--math-font);
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-align: center;
+            grid-column: 2;
+        }
+
+        /* --- Menu Button (Left) --- */
+        .header-left { grid-column: 1; justify-self: start; }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            color: var(--text-color);
+            opacity: 0.6;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+        }
+        .menu-btn:hover { opacity: 1; }
+        .menu-icon { width: 24px; height: 24px; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+
+        /* --- Streak (Right) --- */
+        .header-right { grid-column: 3; justify-self: end; display: flex; align-items: center; }
+
+        .streak-wrapper { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: flex-end; 
+            gap: 4px; 
+            /* Hidden by default, fades in/out */
+            opacity: 0;
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .streak-wrapper.visible { opacity: 1; }
+
+        .streak-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.5; font-weight: 700; }
+        .streak-container { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; }
+        
+        /* Fractal Grid */
+        .f-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 100%; height: 100%; gap: 10%; }
+        .f-item { width: 100%; height: 100%; background-color: var(--text-color); border-radius: 1px; }
+        .f-full { background-color: var(--text-color); opacity: 0.85; }
+        .f-atom { background-color: var(--text-color); }
+
+        /* --- Modal (Menu) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(250, 249, 246, 0.95);
+            backdrop-filter: blur(5px);
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 10vh;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
+
+        .modal-content {
+            width: 90%;
+            max-width: 400px;
+            background: #fff;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            transform: translateY(10px);
+            transition: transform 0.3s ease;
+        }
+        .modal-overlay.open .modal-content { transform: translateY(0); }
+
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .modal-title { font-family: var(--math-font); font-size: 1.2rem; font-weight: 700; }
+        .close-btn { background: none; border: none; cursor: pointer; font-size: 1.5rem; line-height: 1; opacity: 0.5; }
+        
+        /* Bulk Controls */
+        .bulk-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .bulk-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 0.4rem 0.8rem;
+            font-family: var(--ui-font);
+            font-size: 0.8rem;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.2s;
+        }
+        .bulk-btn:hover { border-color: var(--text-color); color: var(--text-color); }
+
+        .toggles-list { display: flex; flex-direction: column; gap: 1rem; }
+        .toggle-item { display: flex; justify-content: space-between; align-items: center; }
+        .toggle-label { font-size: 0.95rem; }
+
+        /* Switch CSS */
+        .switch { position: relative; display: inline-block; width: 40px; height: 22px; -webkit-tap-highlight-color: transparent; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ddd; transition: .4s; border-radius: 22px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent-color); }
+        input:checked + .slider:before { transform: translateX(18px); }
+
+        /* --- Main Game Area --- */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            padding-top: 15vh;
+        }
+
+        .question-container {
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            height: 4rem;
+            flex-wrap: wrap; 
+        }
+
+        .question-part {
+            font-family: var(--math-font);
+            font-size: 3.5rem;
+            font-weight: 400;
+            line-height: 1;
+            color: var(--text-color);
+            font-variant-numeric: lining-nums;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .question-part.long-text { font-size: 2.2rem; letter-spacing: 2px; }
+        .question-part.empty-state { font-size: 1.5rem; font-family: var(--ui-font); opacity: 0.5; }
+
+        .operator { font-size: 2.8rem; color: #555; transform: translateY(-2px); }
+        .operator.text-op { font-size: 2.2rem; margin: 0 1.4rem; font-style: italic; }
+        sup { font-size: 0.6em; vertical-align: super; }
+
+        .input-container { position: relative; width: 200px; }
+        input[type="text"] {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid var(--text-color);
+            font-family: var(--math-font);
+            font-size: 2rem;
+            text-align: center;
+            color: var(--text-color);
+            padding: 0.5rem;
+            outline: none;
+            border-radius: 0;
+            caret-color: var(--accent-color);
+        }
+
+        .feedback-msg {
+            height: 1.5rem;
+            margin-top: 1rem;
+            font-family: var(--ui-font);
+            font-size: 0.9rem;
+            color: var(--error-color);
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        /* Animations */
+        @keyframes shake {
+            0% { transform: translateX(0); } 25% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); } 75% { transform: translateX(-10px); }
+            100% { transform: translateX(0); }
+        }
+        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        .lift-up .question-part { transform: translateY(-15px) scale(1.05); color: var(--text-color); }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <button class="menu-btn" onclick="toggleMenu()" aria-label="Settings">
+                <svg class="menu-icon" viewBox="0 0 24 24">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        
+        <h1>Étude</h1>
+        
+        <div class="header-right">
+            <div class="streak-wrapper">
+                <span class="streak-label">Streak</span>
+                <div id="fractal-box" class="streak-container"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal-overlay" onclick="closeMenu(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">Practice Focus</div>
+                <button class="close-btn" onclick="toggleMenu()">&times;</button>
+            </div>
+            
+            <div class="bulk-controls">
+                <button class="bulk-btn" onclick="bulkToggle(true)">Select All</button>
+                <button class="bulk-btn" onclick="bulkToggle(false)">Select None</button>
+            </div>
+
+            <div id="toggles-container" class="toggles-list">
+                <!-- JS Injected -->
+            </div>
+        </div>
+    </div>
+
+    <main>
+        <div id="question-box" class="question-container"></div>
+
+        <div class="input-container">
+            <input type="text" id="answer-input" inputmode="decimal" placeholder="" autocomplete="off" maxlength="12">
+        </div>
+
+        <div id="feedback" class="feedback-msg">Correct answer: 42</div>
+    </main>
+
+    <script>
+        // --- Math Helpers ---
+        const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const roundTwo = (num) => Math.round((num + Number.EPSILON) * 100) / 100;
+
+        // --- Generators ---
+        const generators = {
+            add: {
+                label: 'Addition',
+                weight: 1.0,
+                fn: () => {
+                    if (Math.random() > 0.7) {
+                        let n1 = getRandomInt(1, 50) + 0.5;
+                        let n2 = getRandomInt(1, 50) + 0.5;
+                        return { text: `${n1} + ${n2}`, answer: n1 + n2 };
+                    }
+                    let n1 = getRandomInt(10, 99);
+                    let n2 = getRandomInt(10, 99);
+                    return { text: `${n1} + ${n2}`, answer: n1 + n2 };
+                }
+            },
+            sub: {
+                label: 'Subtraction',
+                weight: 1.0,
+                fn: () => {
+                    let n1 = getRandomInt(20, 150);
+                    let n2 = getRandomInt(5, n1 - 5);
+                    return { text: `${n1} - ${n2}`, answer: n1 - n2 };
+                }
+            },
+            mult: {
+                label: 'Multiplication',
+                weight: 1.0,
+                fn: () => {
+                    let n1 = getRandomInt(3, 15);
+                    let n2 = getRandomInt(3, 15);
+                    return { text: `${n1} × ${n2}`, answer: n1 * n2 };
+                }
+            },
+            div: {
+                label: 'Division',
+                weight: 1.0,
+                fn: () => {
+                    let b = getRandomInt(3, 12);
+                    let res = getRandomInt(4, 15);
+                    return { text: `${b * res} ÷ ${b}`, answer: res };
+                }
+            },
+            roots: {
+                label: 'Exponents & Roots',
+                weight: 0.6,
+                fn: () => {
+                    if (Math.random() > 0.5) {
+                        const base = getRandomInt(2, 9);
+                        const power = base === 2 ? getRandomInt(2, 6) : getRandomInt(2, 3);
+                        if (Math.random() > 0.8) {
+                            let neg = -1 * (base > 2 ? 1 : getRandomInt(1,2));
+                            return { text: `${base}<sup>${neg}</sup>`, answer: Math.pow(base, neg) };
+                        }
+                        return { text: `${base}<sup>${power}</sup>`, answer: Math.pow(base, power) };
+                    } else {
+                        const root = getRandomInt(4, 15);
+                        return { text: `&radic;${root * root}`, answer: root };
+                    }
+                }
+            },
+            pemdas: {
+                label: 'Order of Operations',
+                weight: 0.5,
+                fn: () => {
+                    if (Math.random() > 0.5) {
+                        let n1 = getRandomInt(2, 10), n2 = getRandomInt(1, 9), n3 = getRandomInt(2, 5);
+                        return { text: `(${n1} + ${n2}) × ${n3}`, answer: (n1 + n2) * n3 };
+                    }
+                    let n1 = getRandomInt(5, 20), n2 = getRandomInt(2, 6), n3 = getRandomInt(2, 5);
+                    return { text: `${n1} + ${n2} × ${n3}`, answer: n1 + (n2 * n3) };
+                }
+            },
+            percent: {
+                label: 'Percentages',
+                weight: 1.0,
+                fn: () => {
+                    if (Math.random() < 0.7) {
+                        const percents = [10, 20, 25, 50, 75];
+                        const p = percents[Math.floor(Math.random() * percents.length)];
+                        const base = getRandomInt(2, 40) * 10;
+                        return { text: `${p}% of ${base}`, answer: (p/100)*base };
+                    }
+                    const p = [1, 5, 15][Math.floor(Math.random() * 3)];
+                    const base = getRandomInt(10, 200);
+                    return { text: `${p}% of ${base}`, answer: (p/100)*base };
+                }
+            },
+            fraction: {
+                label: 'Fractions',
+                weight: 0.7,
+                fn: () => {
+                    // Restricted denominators for easy decimal input (2, 4, 5, 8, 10, 20, 25, 50)
+                    const cleanDenoms = [2, 4, 5, 8, 10, 20, 25, 50];
+
+                    if (Math.random() < 0.5) {
+                        // Addition: 1/2 + 1/4
+                        const d1 = [2,4,5,10][getRandomInt(0, 3)];
+                        const d2 = [2,4,5,10][getRandomInt(0, 3)];
+                        const n2 = getRandomInt(1, 3);
+                        return { text: `1/${d1} + ${n2}/${d2}`, answer: (1/d1) + (n2/d2) };
+                    }
+                    
+                    // Reduction/Simplification -> Answer as Decimal
+                    const d = cleanDenoms[getRandomInt(0, cleanDenoms.length - 1)];
+                    const factor = getRandomInt(2, 5);
+                    const n = getRandomInt(1, d-1);
+                    
+                    // Display as unreduced: e.g. 6/8 (which is 0.75)
+                    return { text: `${n*factor}/${d*factor}`, answer: n/d };
+                }
+            }
+        };
+
+        // --- Config & Persistence ---
+        const defaultConfig = Object.keys(generators).reduce((acc, key) => ({...acc, [key]: true}), {});
+        let activeConfig = JSON.parse(localStorage.getItem('etude_config')) || defaultConfig;
+
+        // --- State Management ---
+        const state = {
+            currentQuestion: {},
+            streak: 0
+        };
+
+        const els = {
+            input: document.getElementById('answer-input'),
+            fractalBox: document.getElementById('fractal-box'),
+            streakWrapper: document.querySelector('.streak-wrapper'), // Added wrapper
+            feedback: document.getElementById('feedback'),
+            container: document.getElementById('question-box'),
+            modal: document.getElementById('settings-modal'),
+            toggles: document.getElementById('toggles-container')
+        };
+
+        // --- UI: Menu Logic ---
+        function initMenu() {
+            els.toggles.innerHTML = '';
+            Object.keys(generators).forEach(key => {
+                const gen = generators[key];
+                const isActive = activeConfig[key];
+                
+                const row = document.createElement('div');
+                row.className = 'toggle-item';
+                
+                row.innerHTML = `
+                    <span class="toggle-label">${gen.label}</span>
+                    <label class="switch" onmousedown="event.preventDefault()">
+                        <input type="checkbox" data-key="${key}" ${isActive ? 'checked' : ''} onchange="updateConfig('${key}', this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                `;
+                els.toggles.appendChild(row);
+            });
+        }
+
+        window.updateConfig = (key, isChecked) => {
+            activeConfig[key] = isChecked;
+            localStorage.setItem('etude_config', JSON.stringify(activeConfig));
+            nextQuestion();
+        };
+
+        window.bulkToggle = (shouldSelect) => {
+            const inputs = els.toggles.querySelectorAll('input[type="checkbox"]');
+            inputs.forEach(inp => inp.checked = shouldSelect);
+
+            Object.keys(generators).forEach(key => {
+                activeConfig[key] = shouldSelect;
+            });
+            
+            localStorage.setItem('etude_config', JSON.stringify(activeConfig));
+            nextQuestion();
+        };
+
+        window.toggleMenu = () => {
+            const isOpen = els.modal.classList.toggle('open');
+            if (isOpen) {
+                els.input.blur(); 
+            } else {
+                setTimeout(() => {
+                     if (!els.modal.classList.contains('open')) els.input.focus();
+                }, 300);
+            }
+        };
+
+        window.closeMenu = (e) => {
+            if (e.target === els.modal) {
+                els.modal.classList.remove('open');
+                setTimeout(() => els.input.focus(), 300);
+            }
+        }
+
+        // --- Core Game Logic ---
+
+        function generateQuestion() {
+            const pool = [];
+            Object.keys(generators).forEach(key => {
+                if (activeConfig[key]) {
+                    const count = Math.floor(generators[key].weight * 10);
+                    for(let i=0; i<count; i++) pool.push(key);
+                }
+            });
+
+            if (pool.length === 0) return null;
+
+            const key = pool[Math.floor(Math.random() * pool.length)];
+            return generators[key].fn();
+        }
+
+        function renderQuestion(data) {
+            if (!data) {
+                els.container.innerHTML = `<span class="question-part empty-state">Select a Mode</span>`;
+                return;
+            }
+
+            const text = data.text;
+            if (text.includes('<') || text.includes('&') || text.length > 15) {
+                const isLong = text.length > 10;
+                els.container.innerHTML = `<span class="question-part ${isLong ? 'long-text' : ''}">${text}</span>`;
+            } else {
+                const parts = text.split(' ');
+                if (parts.length === 3) {
+                    const isTextOp = isNaN(parts[1]) && parts[1].length > 1; 
+                    const opClass = isTextOp ? 'operator text-op' : 'operator';
+                    els.container.innerHTML = `
+                        <span class="question-part">${parts[0]}</span>
+                        <span class="question-part ${opClass}">${parts[1]}</span>
+                        <span class="question-part">${parts[2]}</span>
+                    `;
+                } else {
+                    els.container.innerHTML = `<span class="question-part">${text}</span>`;
+                }
+            }
+        }
+
+        function nextQuestion() {
+            state.currentQuestion = generateQuestion();
+            renderQuestion(state.currentQuestion);
+            
+            els.input.value = '';
+            els.feedback.style.opacity = '0';
+            els.container.classList.remove('lift-up');
+            document.body.classList.remove('success-flash', 'error-flash');
+            
+            if (state.currentQuestion) {
+                els.input.disabled = false;
+                if (!els.modal.classList.contains('open')) {
+                    els.input.focus();
+                }
+            } else {
+                els.input.disabled = true;
+            }
+        }
+
+        function checkInput() {
+            if (!state.currentQuestion) return; 
+
+            let val = els.input.value;
+            const cleanVal = val.replace(/[^0-9.,-]/g, '');
+            if (val !== cleanVal) { els.input.value = cleanVal; val = cleanVal; }
+            if (val === '' || val === '.' || val === '-') return;
+
+            let numVal = parseFloat(val.replace(',', '.'));
+
+            if (isNaN(numVal)) return;
+
+            const correctVal = state.currentQuestion.answer;
+            if (Math.abs(numVal - correctVal) < 0.001) {
+                handleSuccess();
+            }
+        }
+
+        function handleSuccess() {
+            if (document.body.classList.contains('success-flash')) return;
+            state.streak++;
+            renderStreak();
+            document.body.classList.add('success-flash');
+            els.container.classList.add('lift-up');
+            setTimeout(nextQuestion, 350); 
+        }
+
+        function handleFailure(correctVal) {
+            state.streak = 0;
+            renderStreak();
+            
+            els.container.classList.add('shake');
+            document.body.classList.add('error-flash');
+            setTimeout(() => {
+                els.container.classList.remove('shake');
+                document.body.classList.remove('error-flash');
+            }, 400);
+
+            let displayVal = roundTwo(correctVal);
+            els.feedback.innerHTML = `Last: ${state.currentQuestion.text} = <strong>${displayVal}</strong>`;
+            els.feedback.style.opacity = '1';
+            
+            els.input.value = '';
+            nextQuestion();
+        }
+
+        // --- Fractal Render ---
+        function renderStreak() {
+            const s = state.streak;
+            
+            // Toggle Visibility of Entire Wrapper
+            if (s > 0) {
+                els.streakWrapper.classList.add('visible');
+            } else {
+                els.streakWrapper.classList.remove('visible');
+            }
+
+            els.fractalBox.innerHTML = '';
+            if (s === 0) return;
+            let level = 1;
+            while (Math.pow(9, level) < s) level++;
+            els.fractalBox.innerHTML = generateFractalHTML(s, level);
+        }
+
+        function generateFractalHTML(count, level) {
+            if (level === 0) return '<div class="f-item f-atom"></div>';
+            const subCap = Math.pow(9, level - 1);
+            let html = '<div class="f-grid">';
+            for (let i = 0; i < 9; i++) {
+                if (count >= subCap) {
+                    html += '<div class="f-item f-full"></div>';
+                    count -= subCap;
+                } else if (count > 0) {
+                    html += generateFractalHTML(count, level - 1);
+                    count = 0;
+                } else { html += '<div></div>'; }
+            }
+            html += '</div>';
+            return html;
+        }
+
+        // --- Initialization ---
+        els.input.addEventListener('input', checkInput);
+        els.input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                if (!state.currentQuestion) return;
+
+                let val = els.input.value.replace(',', '.');
+                let numVal = parseFloat(val);
+                
+                const correct = state.currentQuestion.answer;
+                if (!isNaN(numVal) && Math.abs(numVal - correct) >= 0.001) {
+                    handleFailure(correct);
+                }
+            }
+        });
+
+        window.onload = () => {
+            initMenu();
+            nextQuestion();
+            setTimeout(() => {
+                if (!els.modal.classList.contains('open')) els.input.focus();
+            }, 100);
+            document.addEventListener('dblclick', (e) => e.preventDefault(), { passive: false });
+        };
+    </script>
+</body>
+</html>
