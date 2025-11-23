@@ -10,6 +10,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- KaTeX for LaTeX rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
     <style>
         :root {
@@ -380,6 +385,17 @@
         }
         .question-part.long-text { font-size: 2.2rem; letter-spacing: 2px; }
         .question-part.empty-state { font-size: 1.5rem; font-family: var(--ui-font); opacity: 0.5; }
+        
+        /* KaTeX styling for inline math */
+        .katex-inline {
+            display: inline-block;
+        }
+        .katex {
+            font-size: inherit !important;
+        }
+        .katex .base {
+            font-size: inherit !important;
+        }
 
         .operator { 
             font-size: 2.8rem; 
@@ -870,6 +886,18 @@
             return generators[key].fn();
         }
 
+        // Process text to render LaTeX for specific elements (like square roots)
+        function processMathText(text) {
+            // Replace square root notation with LaTeX
+            // Pattern: &radic;{number} -> \sqrt{number}
+            const sqrtPattern = /&radic;(\d+)/g;
+            let processedText = text.replace(sqrtPattern, (match, number) => {
+                return `<span class="katex-inline">\\sqrt{${number}}</span>`;
+            });
+            
+            return processedText;
+        }
+
         function renderQuestion(data) {
             if (!data) {
                 els.questionContent.innerHTML = `<span class="question-part empty-state">Select a Mode</span>`;
@@ -877,11 +905,28 @@
             }
 
             const text = data.text;
+            const processedText = processMathText(text);
+            
             if (text.includes('<') || text.includes('&') || text.length > 15) {
                 const isLong = text.length > 10;
-                els.questionContent.innerHTML = `<span class="question-part ${isLong ? 'long-text' : ''}">${text}</span>`;
+                els.questionContent.innerHTML = `<span class="question-part ${isLong ? 'long-text' : ''}">${processedText}</span>`;
+                
+                // Render KaTeX for any LaTeX elements
+                setTimeout(() => {
+                    const katexElements = els.questionContent.querySelectorAll('.katex-inline');
+                    katexElements.forEach(el => {
+                        try {
+                            katex.render(el.textContent, el, {
+                                throwOnError: false,
+                                displayMode: false
+                            });
+                        } catch (e) {
+                            console.error('KaTeX rendering error:', e);
+                        }
+                    });
+                }, 0);
             } else {
-                const parts = text.split(' ');
+                const parts = processedText.split(' ');
                 if (parts.length === 3) {
                     const isTextOp = isNaN(parts[1]) && parts[1].length > 1; 
                     const opClass = isTextOp ? 'operator text-op' : 'operator';
@@ -890,8 +935,38 @@
                         <span class="question-part ${opClass}">${parts[1]}</span>
                         <span class="question-part">${parts[2]}</span>
                     `;
+                    
+                    // Render KaTeX for any LaTeX elements in the parts
+                    setTimeout(() => {
+                        const katexElements = els.questionContent.querySelectorAll('.katex-inline');
+                        katexElements.forEach(el => {
+                            try {
+                                katex.render(el.textContent, el, {
+                                    throwOnError: false,
+                                    displayMode: false
+                                });
+                            } catch (e) {
+                                console.error('KaTeX rendering error:', e);
+                            }
+                        });
+                    }, 0);
                 } else {
-                    els.questionContent.innerHTML = `<span class="question-part">${text}</span>`;
+                    els.questionContent.innerHTML = `<span class="question-part">${processedText}</span>`;
+                    
+                    // Render KaTeX for any LaTeX elements
+                    setTimeout(() => {
+                        const katexElements = els.questionContent.querySelectorAll('.katex-inline');
+                        katexElements.forEach(el => {
+                            try {
+                                katex.render(el.textContent, el, {
+                                    throwOnError: false,
+                                    displayMode: false
+                                });
+                            } catch (e) {
+                                console.error('KaTeX rendering error:', e);
+                            }
+                        });
+                    }, 0);
                 }
             }
         }
