@@ -790,7 +790,8 @@
             blitzMode: activeConfig.blitzMode || false,
             blitzActive: false,
             blitzTimeLeft: 9,
-            blitzInterval: null
+            blitzInterval: null,
+            transitioning: false
         };
 
         const els = {
@@ -1065,6 +1066,9 @@
 
             // Stop any running blitz timer
             stopBlitzTimer();
+            
+            // Re-enable input (transition is complete)
+            state.transitioning = false;
 
             if (state.currentQuestion) {
                 els.input.disabled = false;
@@ -1106,7 +1110,13 @@
         }
 
         function checkInput() {
-            if (!state.currentQuestion) return; 
+            if (!state.currentQuestion) return;
+            
+            // Prevent input during transition
+            if (state.transitioning) {
+                els.input.value = '';
+                return;
+            }
 
             let val = els.input.value;
             const cleanVal = val.replace(/[^0-9.,-]/g, '');
@@ -1140,7 +1150,7 @@
             els.input.focus();
             setTimeout(() => {
                 nextQuestion(true); // Pass flag to preserve focus
-            }, 350);
+            }, 200);
         }
 
         function handleFailure(correctVal) {
@@ -1171,10 +1181,8 @@
             // Show solution for ~1.5 seconds, then fade out gracefully
             setTimeout(() => {
                 els.solutionDisplay.classList.remove('visible');
-                // Wait for fade-out transition (0.4s) before showing next question
-                setTimeout(() => {
-                    nextQuestion(true); // Pass flag to preserve focus
-                }, 400);
+                // Show new problem immediately as solution starts fading
+                nextQuestion(true); // Pass flag to preserve focus
             }, 1500);
         }
 
@@ -1285,12 +1293,21 @@
 
         // Handle Enter/Submit action
         function handleEnterSubmit() {
-            if (!state.currentQuestion) return;
+            if (!state.currentQuestion || state.transitioning) return;
 
             let val = els.input.value.replace(',', '.');
             let numVal = parseFloat(val);
 
             if (isNaN(numVal)) return;
+
+            // Hide mobile enter button immediately when answer is submitted
+            if (els.mobileEnterBtn) {
+                els.mobileEnterBtn.classList.remove('visible');
+            }
+
+            // Prevent input during transition
+            state.transitioning = true;
+            els.input.value = '';
 
             const correct = state.currentQuestion.answer;
             if (Math.abs(numVal - correct) < 0.001) {
