@@ -97,11 +97,74 @@
             /* Hidden by default, fades in/out */
             opacity: 0;
             transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            cursor: pointer;
         }
         .streak-wrapper.visible { opacity: 1; }
 
         .streak-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.5; font-weight: 700; }
-        .streak-container { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; }
+        .streak-container { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; min-height: 30px; }
+        .streak-digits { 
+            font-family: var(--math-font); 
+            font-size: 1.2rem; 
+            font-weight: 700; 
+            color: var(--text-color);
+            line-height: 1;
+            min-height: 30px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Streak Dropdown Menu */
+        .streak-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            min-width: 182px;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-5px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            z-index: 50;
+        }
+        .streak-dropdown.open {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+        .streak-dropdown-header {
+            padding: 0.6rem 1rem;
+            font-family: var(--math-font);
+            font-size: 0.7rem;
+            color: var(--text-color);
+            font-weight: 700;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        .streak-dropdown-item {
+            padding: 0.6rem 1rem;
+            font-family: var(--ui-font);
+            font-size: 0.85rem;
+            color: #666;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .streak-dropdown-item:last-child {
+            border-bottom: none;
+        }
+        .streak-dropdown-item:hover {
+            background-color: var(--bg-color);
+        }
+        .streak-dropdown-item.active {
+            background-color: var(--accent-light);
+            color: var(--accent-color);
+            font-weight: 600;
+        }
         
         /* Fractal Grid */
         .f-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 100%; height: 100%; gap: 10%; }
@@ -476,9 +539,15 @@
         <h1>Étude</h1>
         
         <div class="header-right">
-            <div class="streak-wrapper">
+            <div class="streak-wrapper" id="streak-wrapper">
                 <span class="streak-label">Streak</span>
                 <div id="fractal-box" class="streak-container"></div>
+                <div id="streak-digits" class="streak-digits" style="display: none;"></div>
+                <div class="streak-dropdown" id="streak-dropdown">
+                    <div class="streak-dropdown-header">Counter style</div>
+                    <div class="streak-dropdown-item" data-mode="digits">Digits</div>
+                    <div class="streak-dropdown-item" data-mode="fancy">Fancy</div>
+                </div>
             </div>
         </div>
     </header>
@@ -669,19 +738,21 @@
 
         // --- Config & Persistence ---
         const defaultConfig = {
-            ...Object.keys(generators).reduce((acc, key) => ({...acc, [key]: key !== 'fraction'}), {}),
+            ...Object.keys(generators).reduce((acc, key) => ({...acc, [key]: key !== 'fraction' && key !== 'pemdas'}), {}),
             fraction: false, // Disabled but kept in code for reactivation
+            pemdas: false, // Disabled but kept in code for reactivation
             blitzMode: false,
-            autoAccept: false
+            autoAccept: false,
+            streakMode: 'digits' // Default to digits mode
         };
-        // Load config and ensure all generators (except fraction) are enabled by default
+        // Load config and ensure all generators (except fraction and pemdas) are enabled by default
         let activeConfig = JSON.parse(localStorage.getItem('etude_config')) || {};
-        // Force all generators except fraction to be enabled (override any localStorage values)
+        // Force all generators except fraction and pemdas to be enabled (override any localStorage values)
         Object.keys(generators).forEach(key => {
-            if (key !== 'fraction') {
+            if (key !== 'fraction' && key !== 'pemdas') {
                 activeConfig[key] = true;
             } else {
-                activeConfig[key] = false; // Ensure fraction is disabled
+                activeConfig[key] = false; // Ensure fraction and pemdas are disabled
             }
         });
         // Preserve blitzMode and autoAccept from localStorage if they exist
@@ -690,6 +761,10 @@
         }
         if (activeConfig.autoAccept === undefined) {
             activeConfig.autoAccept = false;
+        }
+        // Set streakMode default to 'digits' if not set
+        if (!activeConfig.streakMode) {
+            activeConfig.streakMode = 'digits';
         }
 
         // --- State Management ---
@@ -705,7 +780,9 @@
         const els = {
             input: document.getElementById('answer-input'),
             fractalBox: document.getElementById('fractal-box'),
-            streakWrapper: document.querySelector('.streak-wrapper'), // Added wrapper
+            streakWrapper: document.getElementById('streak-wrapper'),
+            streakDigits: document.getElementById('streak-digits'),
+            streakDropdown: document.getElementById('streak-dropdown'),
             feedback: document.getElementById('feedback'),
             container: document.getElementById('question-box'),
             questionContent: document.getElementById('question-content'),
@@ -1037,12 +1114,70 @@
                 els.streakWrapper.classList.remove('visible');
             }
 
-            els.fractalBox.innerHTML = '';
-            if (s === 0) return;
-            let level = 1;
-            while (Math.pow(9, level) < s) level++;
-            els.fractalBox.innerHTML = generateFractalHTML(s, level);
+            const mode = activeConfig.streakMode || 'digits';
+            
+            if (mode === 'digits') {
+                // Show digits, hide fractal
+                els.fractalBox.style.display = 'none';
+                els.streakDigits.style.display = 'flex';
+                els.streakDigits.textContent = s > 0 ? s.toString() : '';
+            } else {
+                // Show fractal, hide digits
+                els.fractalBox.style.display = 'flex';
+                els.streakDigits.style.display = 'none';
+                els.fractalBox.innerHTML = '';
+                if (s === 0) return;
+                let level = 1;
+                while (Math.pow(9, level) < s) level++;
+                els.fractalBox.innerHTML = generateFractalHTML(s, level);
+            }
         }
+
+        // Streak Dropdown Functions
+        function updateStreakDropdown() {
+            const mode = activeConfig.streakMode || 'digits';
+            const items = els.streakDropdown.querySelectorAll('.streak-dropdown-item');
+            items.forEach(item => {
+                if (item.dataset.mode === mode) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+
+        function toggleStreakDropdown() {
+            els.streakDropdown.classList.toggle('open');
+        }
+
+        function closeStreakDropdown() {
+            els.streakDropdown.classList.remove('open');
+        }
+
+        function setStreakMode(mode) {
+            activeConfig.streakMode = mode;
+            localStorage.setItem('etude_config', JSON.stringify(activeConfig));
+            updateStreakDropdown();
+            renderStreak();
+            closeStreakDropdown();
+        }
+
+        // Streak wrapper click handler
+        els.streakWrapper.addEventListener('click', (e) => {
+            if (e.target.closest('.streak-dropdown-item')) {
+                const mode = e.target.closest('.streak-dropdown-item').dataset.mode;
+                setStreakMode(mode);
+            } else if (!e.target.closest('.streak-dropdown')) {
+                toggleStreakDropdown();
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!els.streakWrapper.contains(e.target)) {
+                closeStreakDropdown();
+            }
+        });
 
         function generateFractalHTML(count, level) {
             if (level === 0) return '<div class="f-item f-atom"></div>';
@@ -1108,6 +1243,7 @@
 
         window.onload = () => {
             initMenu();
+            updateStreakDropdown();
             nextQuestion();
             setTimeout(() => {
                 if (!els.modal.classList.contains('open')) els.input.focus();
