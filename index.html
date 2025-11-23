@@ -134,7 +134,7 @@
         }
         .modal-overlay.open .modal-content { transform: translateY(0); }
 
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
         .modal-title { font-family: var(--math-font); font-size: 1.2rem; font-weight: 700; }
         .close-btn { background: none; border: none; cursor: pointer; font-size: 1.5rem; line-height: 1; opacity: 0.5; }
 
@@ -486,17 +486,12 @@
                 <button class="close-btn" onclick="toggleMenu()">&times;</button>
             </div>
             
-            <div class="bulk-controls">
-                <button class="bulk-btn" onclick="bulkToggle(true)">Select All</button>
-                <button class="bulk-btn" onclick="bulkToggle(false)">Select None</button>
-            </div>
-
             <div id="toggles-container" class="toggles-list">
                 <!-- JS Injected -->
             </div>
 
             <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(0,0,0,0.05); text-align: center; font-size: 0.75rem; color: #999;">
-                Version 0.4.5
+                Version 0.4.6
             </div>
         </div>
     </div>
@@ -669,11 +664,28 @@
 
         // --- Config & Persistence ---
         const defaultConfig = {
-            ...Object.keys(generators).reduce((acc, key) => ({...acc, [key]: true}), {}),
+            ...Object.keys(generators).reduce((acc, key) => ({...acc, [key]: key !== 'fraction'}), {}),
+            fraction: false, // Disabled but kept in code for reactivation
             blitzMode: false,
             autoAccept: false
         };
-        let activeConfig = JSON.parse(localStorage.getItem('etude_config')) || defaultConfig;
+        // Load config and ensure all generators (except fraction) are enabled by default
+        let activeConfig = JSON.parse(localStorage.getItem('etude_config')) || {};
+        // Force all generators except fraction to be enabled (override any localStorage values)
+        Object.keys(generators).forEach(key => {
+            if (key !== 'fraction') {
+                activeConfig[key] = true;
+            } else {
+                activeConfig[key] = false; // Ensure fraction is disabled
+            }
+        });
+        // Preserve blitzMode and autoAccept from localStorage if they exist
+        if (activeConfig.blitzMode === undefined) {
+            activeConfig.blitzMode = false;
+        }
+        if (activeConfig.autoAccept === undefined) {
+            activeConfig.autoAccept = false;
+        }
 
         // --- State Management ---
         const state = {
@@ -703,29 +715,10 @@
         // --- UI: Menu Logic ---
         function initMenu() {
             els.toggles.innerHTML = '';
-            Object.keys(generators).forEach(key => {
-                const gen = generators[key];
-                const isActive = activeConfig[key];
-                
-                const row = document.createElement('div');
-                row.className = 'toggle-item';
-                
-                row.innerHTML = `
-                    <span class="toggle-label">${gen.label}</span>
-                    <label class="switch" onmousedown="event.preventDefault()">
-                        <input type="checkbox" data-key="${key}" ${isActive ? 'checked' : ''} onchange="updateConfig('${key}', this.checked)">
-                        <span class="slider"></span>
-                    </label>
-                `;
-                els.toggles.appendChild(row);
-            });
 
             // Add blitz mode toggle
             const blitzRow = document.createElement('div');
             blitzRow.className = 'toggle-item';
-            blitzRow.style.marginTop = '1rem';
-            blitzRow.style.paddingTop = '1rem';
-            blitzRow.style.borderTop = '1px solid rgba(0,0,0,0.05)';
             blitzRow.innerHTML = `
                 <span class="toggle-label">Blitz Mode (9s)</span>
                 <label class="switch" onmousedown="event.preventDefault()">
@@ -759,19 +752,6 @@
             }
         };
 
-        window.bulkToggle = (shouldSelect) => {
-            // Only select practice focus toggles (those with data-key attribute)
-            const practiceFocusInputs = els.toggles.querySelectorAll('input[type="checkbox"][data-key]');
-            practiceFocusInputs.forEach(inp => inp.checked = shouldSelect);
-
-            // Only update generator configs, not blitzMode or autoAccept
-            Object.keys(generators).forEach(key => {
-                activeConfig[key] = shouldSelect;
-            });
-            
-            localStorage.setItem('etude_config', JSON.stringify(activeConfig));
-            nextQuestion();
-        };
 
         window.toggleMenu = () => {
             const isOpen = els.modal.classList.toggle('open');
