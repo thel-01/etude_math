@@ -2,7 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#FAF9F6">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#161616">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Étude">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <title>Étude</title>
     <link rel="icon" type="image/png" href="etude_favicon.png">
 
@@ -25,6 +33,19 @@
             --error-color: #C5AFA0;
             --error-light: #F2EBE6;
             --border-color: #dcdcdc;
+            --surface-color: #fff;
+            --overlay-color: rgba(250, 249, 246, 0.95);
+            --muted-color: #666;
+            --operator-color: #555;
+            --quiet-color: #999;
+            --slider-color: #ddd;
+            --button-ink: #fff;
+            --knob-color: #fff;
+            --accent-hover: #7a9199;
+            --accent-active: #6a8189;
+            --border-soft: rgba(0,0,0,0.05);
+            --border-strong: rgba(0,0,0,0.1);
+            --header-dot: rgba(0,0,0,0.15);
             --ui-font: 'Lato', sans-serif;
             --math-font: 'Libre Baskerville', serif;
         }
@@ -36,6 +57,7 @@
             color: var(--text-color);
             font-family: var(--ui-font);
             height: 100dvh;
+            padding-bottom: env(safe-area-inset-bottom);
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -51,12 +73,12 @@
 
         /* --- Header (Grid Layout) --- */
         header {
-            padding: 1.5rem 2rem;
+            padding: calc(1.5rem + env(safe-area-inset-top)) calc(2rem + env(safe-area-inset-right)) 1.5rem calc(2rem + env(safe-area-inset-left));
             display: grid;
             grid-template-columns: 1fr auto 1fr;
             align-items: center;
             border-bottom: none;
-            background-image: radial-gradient(circle, rgba(0,0,0,0.15) 1.4px, transparent 1.4px);
+            background-image: radial-gradient(circle, var(--header-dot) 1.4px, transparent 1.4px);
             background-size: 11.2px 2.8px;
             background-position: 0 bottom;
             background-repeat: repeat-x;
@@ -126,10 +148,10 @@
             top: 100%;
             right: 0;
             margin-top: 8px;
-            background: #fff;
+            background: var(--surface-color);
             border: 1px solid var(--border-color);
             border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px var(--border-strong);
             min-width: 182px;
             opacity: 0;
             pointer-events: none;
@@ -148,18 +170,18 @@
             font-size: 0.7rem;
             color: var(--text-color);
             font-weight: 700;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
+            border-bottom: 1px solid var(--border-strong);
         }
         .streak-dropdown-item {
             padding: 0.6rem 1rem;
             font-family: var(--ui-font);
             font-size: 0.85rem;
-            color: #666;
+            color: var(--muted-color);
             cursor: pointer;
             transition: background-color 0.2s;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
+            border-bottom: 1px solid var(--border-soft);
         }
-        .streak-dropdown-item:last-child {
+        .streak-dropdown-item[data-mode="fancy"] {
             border-bottom: none;
         }
         .streak-dropdown-item:hover {
@@ -181,7 +203,7 @@
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(250, 249, 246, 0.95);
+            background: var(--overlay-color);
             backdrop-filter: blur(5px);
             z-index: 100;
             opacity: 0;
@@ -197,10 +219,10 @@
         .modal-content {
             width: 90%;
             max-width: 400px;
-            background: #fff;
+            background: var(--surface-color);
             padding: 2rem;
             border: 1px solid var(--border-color);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            box-shadow: 0 10px 30px var(--border-soft);
             border-radius: 8px;
             transform: translateY(10px);
             transition: transform 0.3s ease;
@@ -209,13 +231,13 @@
 
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
         .modal-title { font-family: var(--math-font); font-size: 1.2rem; font-weight: 700; }
-        .close-btn { background: none; border: none; cursor: pointer; font-size: 1.5rem; line-height: 1; opacity: 0.5; }
+        .close-btn { color: var(--text-color); background: none; border: none; cursor: pointer; font-size: 1.5rem; line-height: 1; opacity: 0.5; }
 
         /* Blitz Termination Modal */
         .blitz-terminate-modal {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(250, 249, 246, 0.95);
+            background: var(--overlay-color);
             backdrop-filter: blur(5px);
             z-index: 200;
             opacity: 0;
@@ -230,10 +252,10 @@
         .blitz-terminate-content {
             width: 90%;
             max-width: 350px;
-            background: #fff;
+            background: var(--surface-color);
             padding: 2rem;
             border: 1px solid var(--border-color);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            box-shadow: 0 10px 30px var(--border-soft);
             border-radius: 8px;
             transform: translateY(10px);
             transition: transform 0.3s ease;
@@ -251,7 +273,7 @@
         .blitz-terminate-message {
             font-family: var(--ui-font);
             font-size: 0.95rem;
-            color: #666;
+            color: var(--muted-color);
             margin-bottom: 1.5rem;
         }
 
@@ -269,7 +291,7 @@
             font-size: 0.9rem;
             cursor: pointer;
             transition: all 0.2s;
-            background: #fff;
+            background: var(--surface-color);
             color: var(--text-color);
         }
 
@@ -280,13 +302,13 @@
 
         .blitz-terminate-btn.confirm {
             background: var(--accent-color);
-            color: #fff;
+            color: var(--button-ink);
             border-color: var(--accent-color);
         }
 
         .blitz-terminate-btn.confirm:hover {
-            background: #7a9199;
-            border-color: #7a9199;
+            background: var(--accent-hover);
+            border-color: var(--accent-hover);
         }
         
         /* Bulk Controls */
@@ -297,7 +319,7 @@
             margin-bottom: 0.5rem;
             padding-top: 1rem;
             padding-bottom: 0.5rem;
-            border-top: 1px solid rgba(0,0,0,0.05);
+            border-top: 1px solid var(--border-soft);
         }
         .bulk-btn {
             background: none;
@@ -307,7 +329,7 @@
             font-family: var(--ui-font);
             font-size: 0.8rem;
             cursor: pointer;
-            color: #666;
+            color: var(--muted-color);
             transition: all 0.2s;
         }
         .bulk-btn:hover { border-color: var(--text-color); color: var(--text-color); }
@@ -319,8 +341,8 @@
         /* Switch CSS */
         .switch { position: relative; display: inline-block; width: 40px; height: 22px; -webkit-tap-highlight-color: transparent; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ddd; transition: .4s; border-radius: 22px; }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--slider-color); transition: .4s; border-radius: 22px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: var(--knob-color); transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--accent-color); }
         input:checked + .slider:before { transform: translateX(18px); }
 
@@ -397,13 +419,13 @@
             font-size: inherit !important;
         }
 
-        .operator { 
+        .question-part.operator {
             font-size: 2.8rem; 
-            color: #555; 
+            color: var(--operator-color);
             transform: translateY(-2px);
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.3s ease;
         }
-        .operator.text-op { font-size: 2.2rem; margin: 0 1.4rem; font-style: italic; }
+        .question-part.operator.text-op { font-size: 2.2rem; margin: 0 1.4rem; font-style: italic; }
         sup { font-size: 0.6em; vertical-align: super; }
 
         .input-container { 
@@ -452,12 +474,12 @@
             pointer-events: auto;
         }
         .mobile-enter-btn:active {
-            background: #6a8189;
+            background: var(--accent-active);
         }
         .mobile-enter-btn svg {
             width: 24px;
             height: 24px;
-            stroke: #fff;
+            stroke: var(--button-ink);
             stroke-width: 2.5;
             stroke-linecap: round;
             stroke-linejoin: round;
@@ -537,6 +559,43 @@
             transform: translateY(-17px) scale(1.05) !important; 
         }
 
+        .streak-best {
+            color: var(--quiet-color);
+            border-top: 1px solid var(--border-soft);
+            border-bottom: none;
+            cursor: default;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                color-scheme: dark;
+                --bg-color: #161616;
+                --text-color: #ECEAE4;
+                --surface-color: #202020;
+                --border-color: #333;
+                --accent-light: #1F2A25;
+                --error-light: #2C2421;
+                --overlay-color: rgba(22, 22, 22, 0.95);
+                --muted-color: #A8A8A8;
+                --operator-color: #A8A8A8;
+                --quiet-color: #A8A8A8;
+                --slider-color: #333;
+                --button-ink: #161616;
+                --knob-color: #ECEAE4;
+                --accent-hover: #9BB0A6;
+                --accent-active: #7B9187;
+                --border-soft: #333;
+                --border-strong: #333;
+                --header-dot: #333;
+            }
+        }
+        @media (min-width: 769px) {
+            .question-part { font-size: 4.5rem; }
+            .question-part.operator { font-size: 3.6rem; }
+            .question-part.operator.text-op { font-size: 2.6rem; }
+            .question-part.long-text { font-size: 2.8rem; }
+            .question-part.empty-state { font-size: 1.5rem; }
+            .input-container { width: 240px; }
+        }
     </style>
 </head>
 <body>
@@ -563,6 +622,7 @@
                     <div class="streak-dropdown-header">Counter style</div>
                     <div class="streak-dropdown-item" data-mode="digits">Digits</div>
                     <div class="streak-dropdown-item" data-mode="fancy">Fancy</div>
+                    <div id="streak-best" class="streak-dropdown-header streak-best" hidden></div>
                 </div>
             </div>
         </div>
@@ -580,8 +640,8 @@
                 <!-- JS Injected -->
             </div>
 
-            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(0,0,0,0.05); text-align: center; font-size: 0.75rem; color: #999;">
-                Version 0.4.7
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-soft); text-align: center; font-size: 0.75rem; color: var(--quiet-color);">
+                Version 0.5.0
             </div>
         </div>
     </div>
@@ -630,20 +690,36 @@
             </button>
         </div>
 
-        <div id="feedback" class="feedback-msg">Correct answer: 42</div>
+        <div id="feedback" class="feedback-msg"></div>
     </main>
 
     <script>
         // --- Math Helpers ---
         const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-        const roundTwo = (num) => Math.round((num + Number.EPSILON) * 100) / 100;
+        const pick = values => values[getRandomInt(0, values.length - 1)];
+        const decimalAnswer = value => Number(value.toFixed(3));
 
         // --- Generators ---
         const generators = {
             add: {
                 label: 'Addition',
                 weight: 1.0,
-                fn: () => {
+                fn: (level = 1) => {
+                    if (level > 1) {
+                        let a, b;
+                        if (level === 2) {
+                            const half = Math.random() < 0.4;
+                            a = getRandomInt(10, 99) + (half ? 0.5 : 0);
+                            b = getRandomInt(10, 99) + (half ? 0.5 : 0);
+                        } else if (level === 3) {
+                            a = getRandomInt(100, 999); b = getRandomInt(10, 99);
+                        } else if (level === 4) {
+                            a = getRandomInt(100, 999); b = getRandomInt(100, 999);
+                        } else {
+                            a = getRandomInt(100, 9999) / 10; b = getRandomInt(100, 9999) / 10;
+                        }
+                        return { text: `${a} + ${b}`, answer: decimalAnswer(a + b) };
+                    }
                     if (Math.random() > 0.7) {
                         let n1 = getRandomInt(1, 50) + 0.5;
                         let n2 = getRandomInt(1, 50) + 0.5;
@@ -657,7 +733,22 @@
             sub: {
                 label: 'Subtraction',
                 weight: 1.0,
-                fn: () => {
+                fn: (level = 1) => {
+                    if (level > 1) {
+                        let a, b;
+                        if (level === 2) {
+                            a = getRandomInt(100, 200); b = getRandomInt(10, a - 5);
+                        } else if (level === 3) {
+                            a = getRandomInt(10, 99) * 10 + getRandomInt(0, 8);
+                            b = getRandomInt(1, 9) * 10 + getRandomInt(a % 10 + 1, 9);
+                        } else if (level === 4) {
+                            a = getRandomInt(101, 999); b = getRandomInt(100, a);
+                        } else {
+                            a = getRandomInt(1000, 9999); b = getRandomInt(100, a);
+                            a /= 10; b /= 10;
+                        }
+                        return { text: `${a} - ${b}`, answer: decimalAnswer(a - b) };
+                    }
                     let n1 = getRandomInt(20, 150);
                     let n2 = getRandomInt(5, n1 - 5);
                     return { text: `${n1} - ${n2}`, answer: n1 - n2 };
@@ -666,7 +757,16 @@
             mult: {
                 label: 'Multiplication',
                 weight: 1.0,
-                fn: () => {
+                fn: (level = 1) => {
+                    if (level > 1) {
+                        let a, b;
+                        if (level === 2) { a = getRandomInt(12, 20); b = getRandomInt(3, 9); }
+                        else if (level === 3) { a = getRandomInt(12, 99); b = getRandomInt(3, 9); }
+                        else if (level === 4) { a = getRandomInt(11, 25); b = getRandomInt(11, 25); }
+                        else if (Math.random() < 0.3) { a = getRandomInt(2, 9) / 10; b = getRandomInt(20, 99); }
+                        else { a = getRandomInt(26, 99); b = getRandomInt(10, 12); }
+                        return { text: `${a} × ${b}`, answer: decimalAnswer(a * b) };
+                    }
                     let n1 = getRandomInt(3, 15);
                     let n2 = getRandomInt(3, 15);
                     return { text: `${n1} × ${n2}`, answer: n1 * n2 };
@@ -675,7 +775,18 @@
             div: {
                 label: 'Division',
                 weight: 1.0,
-                fn: () => {
+                fn: (level = 1) => {
+                    if (level > 1) {
+                        let divisor, quotient, dividend;
+                        if (level === 2) { divisor = getRandomInt(3, 12); quotient = getRandomInt(12, 20); }
+                        else if (level === 3) { divisor = getRandomInt(3, 9); quotient = getRandomInt(12, 99); }
+                        else if (level === 4) { divisor = getRandomInt(11, 25); quotient = getRandomInt(11, 25); }
+                        else {
+                            divisor = pick([4, 8]); dividend = getRandomInt(100, 999);
+                            return { text: `${dividend} ÷ ${divisor}`, answer: dividend / divisor };
+                        }
+                        return { text: `${divisor * quotient} ÷ ${divisor}`, answer: quotient };
+                    }
                     let b = getRandomInt(3, 12);
                     let res = getRandomInt(4, 15);
                     return { text: `${b * res} ÷ ${b}`, answer: res };
@@ -684,13 +795,34 @@
             roots: {
                 label: 'Exponents & Roots',
                 weight: 0.6,
-                fn: () => {
+                fn: (level = 1) => {
+                    if (level > 1) {
+                        if (level === 2) {
+                            const cube = Math.random() < 0.4;
+                            const base = cube ? getRandomInt(2, 5) : getRandomInt(10, 20);
+                            return { text: `${base}<sup>${cube ? 3 : 2}</sup>`, answer: base ** (cube ? 3 : 2) };
+                        }
+                        if (level === 3) {
+                            if (Math.random() < 0.5) {
+                                const root = getRandomInt(16, 25);
+                                return { text: `&radic;${root * root}`, answer: root };
+                            }
+                            const power = getRandomInt(7, 10);
+                            return { text: `2<sup>${power}</sup>`, answer: 2 ** power };
+                        }
+                        if (level === 4 && Math.random() < 0.4) {
+                            const root = getRandomInt(2, 10);
+                            return { text: `∛${root ** 3}`, answer: root };
+                        }
+                        const base = level === 4 ? getRandomInt(21, 35) : pick([45, 55, 65, 75, 85, 95, 46, 47, 48, 49, 51, 52, 53, 54]);
+                        return { text: `${base}<sup>2</sup>`, answer: base * base };
+                    }
                     if (Math.random() > 0.5) {
                         const base = getRandomInt(2, 9);
                         const power = base === 2 ? getRandomInt(2, 6) : getRandomInt(2, 3);
                         if (Math.random() > 0.8) {
-                            let neg = -1 * (base > 2 ? 1 : getRandomInt(1,2));
-                            return { text: `${base}<sup>${neg}</sup>`, answer: Math.pow(base, neg) };
+                            const [negativeBase, exponent] = pick([[2, -1], [4, -1], [5, -1], [8, -1], [10, -1], [2, -2], [2, -3], [5, -2]]);
+                            return { text: `${negativeBase}<sup>${exponent}</sup>`, answer: negativeBase ** exponent };
                         }
                         return { text: `${base}<sup>${power}</sup>`, answer: Math.pow(base, power) };
                     } else {
@@ -702,7 +834,15 @@
             pemdas: {
                 label: 'Order of Operations',
                 weight: 0.5,
-                fn: () => {
+                fn: (level = 1) => {
+                    if (level > 1) {
+                        const a = getRandomInt(10 * level, 20 * level);
+                        const b = getRandomInt(2 * level, 5 * level);
+                        const c = getRandomInt(2, level + 4);
+                        return Math.random() < 0.5
+                            ? { text: `(${a} + ${b}) × ${c}`, answer: (a + b) * c }
+                            : { text: `${a} + ${b} × ${c}`, answer: a + b * c };
+                    }
                     if (Math.random() > 0.5) {
                         let n1 = getRandomInt(2, 10), n2 = getRandomInt(1, 9), n3 = getRandomInt(2, 5);
                         return { text: `(${n1} + ${n2}) × ${n3}`, answer: (n1 + n2) * n3 };
@@ -714,7 +854,22 @@
             percent: {
                 label: 'Percentages',
                 weight: 1.0,
-                fn: () => {
+                fn: (level = 1) => {
+                    if (level > 1) {
+                        let p, base;
+                        if (level === 2) {
+                            p = pick([5, 10, 15, 20, 25, 50, 75]); base = getRandomInt(2, 40) * 10;
+                        } else if (level === 3) {
+                            p = pick([1, 5, 10, 15, 20, 25, 30, 40, 60, 75]); base = getRandomInt(10, 400);
+                        } else if (level === 4) {
+                            p = pick([12.5, 2.5, 35, 45]); base = getRandomInt(4, 80) * 5;
+                        } else {
+                            p = pick([2.5, 12.5, 15, 35, 45, 65, 85]);
+                            // .2 steps keep even 2.5% and 12.5% answers within three decimals.
+                            base = Math.random() < 0.5 ? getRandomInt(51, 499) / 5 : getRandomInt(100, 999);
+                        }
+                        return { text: `${p}% of ${base}`, answer: decimalAnswer(p * base / 100) };
+                    }
                     if (Math.random() < 0.7) {
                         const percents = [10, 20, 25, 50, 75];
                         const p = percents[Math.floor(Math.random() * percents.length)];
@@ -729,7 +884,14 @@
             fraction: {
                 label: 'Fractions',
                 weight: 0.7,
-                fn: () => {
+                fn: (level = 1) => {
+                    if (level > 1) {
+                        const denoms = level === 2 ? [4, 5, 8, 10] : level === 3 ? [8, 20, 25, 50] : [40, 125, 200, 250];
+                        const d = pick(denoms), n = getRandomInt(d + 1, d * level);
+                        if (level < 5) return { text: `${n}/${d}`, answer: n / d };
+                        const d2 = pick([8, 20, 125]), n2 = getRandomInt(10, d2 * 2);
+                        return { text: `${n}/${d} + ${n2}/${d2}`, answer: decimalAnswer(n / d + n2 / d2) };
+                    }
                     // Restricted denominators for easy decimal input (2, 4, 5, 8, 10, 20, 25, 50)
                     const cleanDenoms = [2, 4, 5, 8, 10, 20, 25, 50];
 
@@ -761,36 +923,61 @@
             autoAccept: false,
             streakMode: 'digits' // Default to digits mode
         };
-        // Load config and ensure all generators (except fraction and pemdas) are enabled by default
-        let activeConfig = JSON.parse(localStorage.getItem('etude_config')) || {};
-        // Force all generators except fraction and pemdas to be enabled (override any localStorage values)
+        function readStored(key, fallback) {
+            try {
+                const value = JSON.parse(localStorage.getItem(key));
+                return value === null ? fallback : value;
+            } catch (_) { return fallback; }
+        }
+
+        function writeStored(key, value) {
+            try { localStorage.setItem(key, JSON.stringify(value)); } catch (_) {}
+        }
+
+        const storedConfig = readStored('etude_config', {});
+        let activeConfig = { ...defaultConfig, ...(storedConfig && typeof storedConfig === 'object' ? storedConfig : {}) };
+        // Category switches intentionally remain unavailable.
         Object.keys(generators).forEach(key => {
-            if (key !== 'fraction' && key !== 'pemdas') {
-                activeConfig[key] = true;
-            } else {
-                activeConfig[key] = false; // Ensure fraction and pemdas are disabled
-            }
+            activeConfig[key] = key !== 'fraction' && key !== 'pemdas';
         });
-        // Preserve blitzMode and autoAccept from localStorage if they exist
-        if (activeConfig.blitzMode === undefined) {
-            activeConfig.blitzMode = false;
-        }
-        if (activeConfig.autoAccept === undefined) {
-            activeConfig.autoAccept = false;
-        }
-        // Set streakMode default to 'digits' if not set
-        if (!activeConfig.streakMode) {
-            activeConfig.streakMode = 'digits';
-        }
+        const storedLevels = readStored('etude_levels', {});
+        const storedStats = readStored('etude_stats', {});
+        const levels = {}, stats = {};
+        Object.keys(generators).forEach(key => {
+            const level = storedLevels && storedLevels[key];
+            levels[key] = Number.isInteger(level) ? Math.max(1, Math.min(5, level)) : 1;
+            const saved = storedStats && storedStats[key];
+            stats[key] = {
+                recent: Array.isArray(saved?.recent) ? saved.recent.filter(x => typeof x === 'boolean').slice(-10) : [],
+                run: Array.isArray(saved?.run) ? saved.run.filter(x => typeof x === 'boolean').slice(-4) : [],
+                correctRun: Number.isInteger(saved?.correctRun) ? Math.max(0, Math.min(4, saved.correctRun)) : 0
+            };
+        });
+        const storedCount = key => {
+            const value = readStored(key, 0);
+            return Number.isSafeInteger(value) && value > 0 ? value : 0;
+        };
 
         // --- State Management ---
         const state = {
-            currentQuestion: {},
-            streak: 0,
+            currentQuestion: null,
+            streak: storedCount('etude_streak'),
+            best: Math.max(storedCount('etude_best'), storedCount('etude_streak')),
+            questionNumber: 0,
+            reviewQueue: [],
             blitzMode: activeConfig.blitzMode || false,
             blitzActive: false,
             blitzTimeLeft: 9,
             blitzInterval: null,
+            blitzStartTimeout: null,
+            blitzStartRemaining: null,
+            blitzStartDeadline: null,
+            blitzRemainingMs: 9000,
+            blitzDeadline: null,
+            resolutionTimeout: null,
+            solutionTimeout: null,
+            flashTimeout: null,
+            resolving: false,
             transitioning: false
         };
 
@@ -800,6 +987,7 @@
             streakWrapper: document.getElementById('streak-wrapper'),
             streakDigits: document.getElementById('streak-digits'),
             streakDropdown: document.getElementById('streak-dropdown'),
+            streakBest: document.getElementById('streak-best'),
             feedback: document.getElementById('feedback'),
             container: document.getElementById('question-box'),
             questionContent: document.getElementById('question-content'),
@@ -845,58 +1033,110 @@
             if (key === 'blitzMode') {
                 state.blitzMode = isChecked;
             }
-            localStorage.setItem('etude_config', JSON.stringify(activeConfig));
+            writeStored('etude_config', activeConfig);
             if (key !== 'autoAccept') {
                 nextQuestion();
             }
         };
 
 
+        function modalIsOpen() {
+            return els.modal.classList.contains('open') || els.blitzTerminateModal.classList.contains('open');
+        }
+
+        function refocusInput() {
+            if (!modalIsOpen() && !els.input.disabled) els.input.focus();
+        }
+
         window.toggleMenu = () => {
             const isOpen = els.modal.classList.toggle('open');
             if (isOpen) {
-                els.input.blur(); 
+                pauseBlitzTimer();
+                els.input.blur();
             } else {
-                setTimeout(() => {
-                     if (!els.modal.classList.contains('open')) els.input.focus();
-                }, 300);
+                resumeBlitzTimer();
+                setTimeout(refocusInput, 300);
             }
         };
 
         window.closeMenu = (e) => {
             if (e.target === els.modal) {
                 els.modal.classList.remove('open');
-                setTimeout(() => els.input.focus(), 300);
+                resumeBlitzTimer();
+                setTimeout(refocusInput, 300);
+            }
+        };
+
+        // --- Core Game Logic ---
+        function recordAttempt(correct) {
+            const key = state.currentQuestion.category;
+            const category = stats[key];
+            category.recent.push(correct);
+            category.recent = category.recent.slice(-10);
+            category.run.push(correct);
+            category.run = category.run.slice(-4);
+            category.correctRun = correct ? category.correctRun + 1 : 0;
+            let nextLevel = levels[key];
+            if (category.correctRun >= 5) nextLevel++;
+            else if (category.run.filter(result => !result).length >= 2) nextLevel--;
+            nextLevel = Math.max(1, Math.min(5, nextLevel));
+            if (nextLevel !== levels[key]) {
+                levels[key] = nextLevel;
+                category.run = [];
+                category.correctRun = 0;
+            }
+            writeStored('etude_levels', levels);
+            writeStored('etude_stats', stats);
+            if (!correct) {
+                const question = state.currentQuestion;
+                state.reviewQueue = state.reviewQueue.filter(item => item.question.text !== question.text || item.question.category !== key);
+                if (state.reviewQueue.length >= 10) state.reviewQueue.shift();
+                state.reviewQueue.push({ question: { ...question }, due: state.questionNumber + getRandomInt(3, 5) + 1 });
             }
         }
 
-        // --- Core Game Logic ---
-
         function generateQuestion() {
-            const pool = [];
-            Object.keys(generators).forEach(key => {
-                if (activeConfig[key]) {
-                    const count = Math.floor(generators[key].weight * 10);
-                    for(let i=0; i<count; i++) pool.push(key);
-                }
+            const pool = Object.keys(generators).filter(key => activeConfig[key]).map(key => {
+                const recent = stats[key].recent;
+                const errorRate = recent.length ? recent.filter(result => !result).length / recent.length : 0;
+                return { key, weight: generators[key].weight * (1 + errorRate) };
             });
-
-            if (pool.length === 0) return null;
-
-            const key = pool[Math.floor(Math.random() * pool.length)];
-            return generators[key].fn();
+            const total = pool.reduce((sum, item) => sum + item.weight, 0);
+            if (!total) return null;
+            let draw = Math.random() * total;
+            const selected = pool.find(item => (draw -= item.weight) < 0) || pool[pool.length - 1];
+            return { ...generators[selected.key].fn(levels[selected.key]), category: selected.key };
         }
 
-        // Process text to render LaTeX for specific elements (like square roots)
+        function chooseQuestion() {
+            state.questionNumber++;
+            state.reviewQueue = state.reviewQueue.filter(item => activeConfig[item.question.category]);
+            const previousText = state.currentQuestion?.text;
+            const reviewIndex = state.reviewQueue.findIndex(item => item.due <= state.questionNumber && item.question.text !== previousText);
+            if (reviewIndex >= 0) return state.reviewQueue.splice(reviewIndex, 1)[0].question;
+            let question;
+            for (let attempt = 0; attempt <= 10; attempt++) {
+                question = generateQuestion();
+                if (!question || question.text !== previousText) return question;
+            }
+            // A different enabled category guarantees different notation if random retries repeat.
+            const alternate = Object.keys(generators).find(key => activeConfig[key] && key !== question.category);
+            return alternate ? { ...generators[alternate].fn(levels[alternate]), category: alternate } : null;
+        }
+
         function processMathText(text) {
-            // Replace square root notation with LaTeX
-            // Pattern: &radic;{number} -> \sqrt{number}
-            const sqrtPattern = /&radic;(\d+)/g;
-            let processedText = text.replace(sqrtPattern, (match, number) => {
-                return `<span class="katex-inline">\\sqrt{${number}}</span>`;
+            return text.replace(/&radic;(\d+)/g, (_, number) =>
+                `<span class="katex-inline" data-root="${number}">√${number}</span>`);
+        }
+
+        function renderMath() {
+            if (!window.katex || typeof window.katex.render !== 'function') return;
+            els.questionContent.querySelectorAll('.katex-inline').forEach(el => {
+                const fallback = `√${el.dataset.root}`;
+                try {
+                    window.katex.render(`\\sqrt{${el.dataset.root}}`, el, { throwOnError: true, displayMode: false });
+                } catch (_) { el.textContent = fallback; }
             });
-            
-            return processedText;
         }
 
         function renderQuestion(data) {
@@ -904,107 +1144,102 @@
                 els.questionContent.innerHTML = `<span class="question-part empty-state">Select a Mode</span>`;
                 return;
             }
-
             const text = data.text;
             const processedText = processMathText(text);
-            
             if (text.includes('<') || text.includes('&') || text.length > 15) {
                 const isLong = text.length > 10;
                 els.questionContent.innerHTML = `<span class="question-part ${isLong ? 'long-text' : ''}">${processedText}</span>`;
-                
-                // Render KaTeX for any LaTeX elements
-                setTimeout(() => {
-                    const katexElements = els.questionContent.querySelectorAll('.katex-inline');
-                    katexElements.forEach(el => {
-                        try {
-                            katex.render(el.textContent, el, {
-                                throwOnError: false,
-                                displayMode: false
-                            });
-                        } catch (e) {
-                            console.error('KaTeX rendering error:', e);
-                        }
-                    });
-                }, 0);
             } else {
                 const parts = processedText.split(' ');
                 if (parts.length === 3) {
-                    const isTextOp = isNaN(parts[1]) && parts[1].length > 1; 
+                    const isTextOp = isNaN(parts[1]) && parts[1].length > 1;
                     const opClass = isTextOp ? 'operator text-op' : 'operator';
                     els.questionContent.innerHTML = `
                         <span class="question-part">${parts[0]}</span>
                         <span class="question-part ${opClass}">${parts[1]}</span>
                         <span class="question-part">${parts[2]}</span>
                     `;
-                    
-                    // Render KaTeX for any LaTeX elements in the parts
-                    setTimeout(() => {
-                        const katexElements = els.questionContent.querySelectorAll('.katex-inline');
-                        katexElements.forEach(el => {
-                            try {
-                                katex.render(el.textContent, el, {
-                                    throwOnError: false,
-                                    displayMode: false
-                                });
-                            } catch (e) {
-                                console.error('KaTeX rendering error:', e);
-                            }
-                        });
-                    }, 0);
                 } else {
                     els.questionContent.innerHTML = `<span class="question-part">${processedText}</span>`;
-                    
-                    // Render KaTeX for any LaTeX elements
-                    setTimeout(() => {
-                        const katexElements = els.questionContent.querySelectorAll('.katex-inline');
-                        katexElements.forEach(el => {
-                            try {
-                                katex.render(el.textContent, el, {
-                                    throwOnError: false,
-                                    displayMode: false
-                                });
-                            } catch (e) {
-                                console.error('KaTeX rendering error:', e);
-                            }
-                        });
-                    }, 0);
                 }
+            }
+            renderMath();
+        }
+
+        // Blitz keeps the exact remaining countdown and start delay while a modal is open.
+        function scheduleBlitzStart() {
+            if (modalIsOpen() || state.resolving || !state.blitzMode || !state.currentQuestion || state.blitzStartRemaining === null) return;
+            state.blitzStartDeadline = performance.now() + state.blitzStartRemaining;
+            state.blitzStartTimeout = setTimeout(() => {
+                state.blitzStartTimeout = null;
+                state.blitzStartRemaining = null;
+                state.blitzStartDeadline = null;
+                startBlitzTimer();
+            }, state.blitzStartRemaining);
+        }
+
+        function startBlitzTimer() {
+            if (!state.blitzMode || state.resolving || modalIsOpen() || !state.currentQuestion) return;
+            state.blitzActive = true;
+            state.blitzTimeLeft = 9;
+            state.blitzRemainingMs = 9000;
+            els.blitzTimer.classList.add('active');
+            resetBlitzSquares();
+            resumeBlitzTimer();
+        }
+
+        function tickBlitzTimer() {
+            state.blitzInterval = null;
+            if (state.resolving || modalIsOpen() || !state.blitzActive) return;
+            state.blitzRemainingMs = Math.max(0, state.blitzDeadline - performance.now());
+            state.blitzTimeLeft = Math.ceil(state.blitzRemainingMs / 1000);
+            updateBlitzSquares();
+            if (state.blitzRemainingMs <= 0) {
+                if (state.currentQuestion && !state.resolving) handleFailure(state.currentQuestion.answer);
+            } else {
+                const untilNextSquare = state.blitzRemainingMs - (state.blitzTimeLeft - 1) * 1000;
+                state.blitzInterval = setTimeout(tickBlitzTimer, Math.max(1, untilNextSquare));
             }
         }
 
-        // Blitz Mode Functions
-        function startBlitzTimer() {
-            if (!state.blitzMode) return;
-
-            state.blitzActive = true;
-            state.blitzTimeLeft = 9;
-            els.blitzTimer.classList.add('active');
-            resetBlitzSquares();
-
-            state.blitzInterval = setInterval(() => {
-                state.blitzTimeLeft--;
-                updateBlitzSquares();
-
-                if (state.blitzTimeLeft <= 0) {
-                    stopBlitzTimer();
-                    if (state.currentQuestion && !document.body.classList.contains('success-flash')) {
-                        handleFailure(state.currentQuestion.answer);
-                    }
-                }
-            }, 1000);
+        function pauseBlitzTimer() {
+            if (state.blitzStartTimeout !== null) {
+                state.blitzStartRemaining = Math.max(0, state.blitzStartDeadline - performance.now());
+                clearTimeout(state.blitzStartTimeout);
+                state.blitzStartTimeout = null;
+                state.blitzStartDeadline = null;
+            }
+            if (state.blitzActive && state.blitzDeadline !== null) {
+                state.blitzRemainingMs = Math.max(0, state.blitzDeadline - performance.now());
+                clearTimeout(state.blitzInterval);
+                state.blitzInterval = null;
+                state.blitzDeadline = null;
+            }
         }
 
-        // Blitz Timer Click Handler
+        function resumeBlitzTimer() {
+            if (modalIsOpen() || state.resolving || !state.blitzMode) return;
+            if (state.blitzActive && state.blitzInterval === null) {
+                state.blitzDeadline = performance.now() + state.blitzRemainingMs;
+                tickBlitzTimer();
+            } else if (state.blitzStartTimeout === null) {
+                scheduleBlitzStart();
+            }
+        }
+
         els.blitzTimer.addEventListener('click', () => {
-            if (state.blitzActive) {
+            if (state.blitzActive && !state.resolving) {
                 els.blitzTerminateModal.classList.add('open');
+                pauseBlitzTimer();
+                els.input.blur();
             }
         });
 
-        // Blitz Termination Modal Functions
         window.closeBlitzTerminateModal = (e) => {
             if (!e || e.target === els.blitzTerminateModal) {
                 els.blitzTerminateModal.classList.remove('open');
+                resumeBlitzTimer();
+                refocusInput();
             }
         };
 
@@ -1012,23 +1247,21 @@
             stopBlitzTimer();
             state.blitzMode = false;
             activeConfig.blitzMode = false;
-            localStorage.setItem('etude_config', JSON.stringify(activeConfig));
-            
-            // Update the toggle in the settings menu
+            writeStored('etude_config', activeConfig);
             const blitzToggle = document.getElementById('blitz-toggle');
-            if (blitzToggle) {
-                blitzToggle.checked = false;
-            }
-            
+            if (blitzToggle) blitzToggle.checked = false;
             els.blitzTerminateModal.classList.remove('open');
             nextQuestion();
         };
 
         function stopBlitzTimer() {
-            if (state.blitzInterval) {
-                clearInterval(state.blitzInterval);
-                state.blitzInterval = null;
-            }
+            clearTimeout(state.blitzInterval);
+            clearTimeout(state.blitzStartTimeout);
+            state.blitzInterval = null;
+            state.blitzStartTimeout = null;
+            state.blitzStartRemaining = null;
+            state.blitzStartDeadline = null;
+            state.blitzDeadline = null;
             state.blitzActive = false;
             els.blitzTimer.classList.remove('active');
         }
@@ -1044,39 +1277,40 @@
             const squares = els.blitzTimer.querySelectorAll('.blitz-square');
             const fadeOrder = [0, 1, 2, 5, 8, 7, 6, 3, 4]; // Clockwise perimeter then center
 
-            if (fadeIndex > 0 && fadeIndex <= 9) {
-                squares[fadeOrder[fadeIndex - 1]].classList.add('faded');
-            }
+            squares.forEach((square, index) => {
+                square.classList.toggle('faded', fadeOrder.indexOf(index) < fadeIndex);
+            });
         }
 
         function nextQuestion(preserveFocus = false) {
-            state.currentQuestion = generateQuestion();
+            stopBlitzTimer();
+            clearTimeout(state.resolutionTimeout);
+            clearTimeout(state.solutionTimeout);
+            clearTimeout(state.flashTimeout);
+            state.resolving = false;
+            state.transitioning = false;
+            state.currentQuestion = chooseQuestion();
             renderQuestion(state.currentQuestion);
 
             els.input.value = '';
             els.feedback.style.opacity = '0';
-            els.container.classList.remove('lift-up');
+            els.container.classList.remove('lift-up', 'shake');
             document.body.classList.remove('success-flash', 'error-flash');
 
             // Clear solution display (it should already be faded out)
+            els.solutionDisplay.classList.remove('visible');
             els.solutionDisplay.textContent = '';
 
             // Hide mobile enter button
             updateMobileEnterButton();
 
-            // Stop any running blitz timer
-            stopBlitzTimer();
-            
-            // Re-enable input (transition is complete)
-            state.transitioning = false;
-
             if (state.currentQuestion) {
                 els.input.disabled = false;
-                if (!els.modal.classList.contains('open')) {
+                if (!modalIsOpen()) {
                     if (preserveFocus) {
                         // Maintain focus if it was already focused (for mobile keyboard)
                         setTimeout(() => {
-                            if (document.activeElement !== els.input) {
+                            if (!modalIsOpen() && document.activeElement !== els.input) {
                                 els.input.focus();
                             }
                         }, 50);
@@ -1084,13 +1318,9 @@
                         els.input.focus();
                     }
                 }
-                // Start blitz timer if enabled, with 1 second delay
                 if (state.blitzMode) {
-                    setTimeout(() => {
-                        if (state.blitzMode && state.currentQuestion && !state.blitzActive) {
-                            startBlitzTimer();
-                        }
-                    }, 1000);
+                    state.blitzStartRemaining = 1000;
+                    scheduleBlitzStart();
                 }
             } else {
                 els.input.disabled = true;
@@ -1113,7 +1343,7 @@
             if (!state.currentQuestion) return;
             
             // Prevent input during transition
-            if (state.transitioning) {
+            if (state.resolving || state.transitioning || modalIsOpen()) {
                 els.input.value = '';
                 return;
             }
@@ -1140,37 +1370,45 @@
         }
 
         function handleSuccess() {
-            if (document.body.classList.contains('success-flash')) return;
+            if (state.resolving || !state.currentQuestion) return;
+            state.resolving = true;
+            state.transitioning = true;
             stopBlitzTimer();
+            recordAttempt(true);
             state.streak++;
+            state.best = Math.max(state.best, state.streak);
             renderStreak();
             document.body.classList.add('success-flash');
             els.container.classList.add('lift-up');
             // Keep input focused to prevent mobile keyboard from closing
             els.input.focus();
-            setTimeout(() => {
+            state.resolutionTimeout = setTimeout(() => {
                 nextQuestion(true); // Pass flag to preserve focus
             }, 200);
         }
 
         function handleFailure(correctVal) {
+            if (state.resolving || !state.currentQuestion) return;
+            state.resolving = true;
+            state.transitioning = true;
             stopBlitzTimer();
+            recordAttempt(false);
             state.streak = 0;
             renderStreak();
             
             els.container.classList.add('shake');
             document.body.classList.add('error-flash');
-            setTimeout(() => {
+            state.flashTimeout = setTimeout(() => {
                 els.container.classList.remove('shake');
                 document.body.classList.remove('error-flash');
             }, 400);
 
-            let displayVal = roundTwo(correctVal);
+            const displayVal = Number(correctVal.toFixed(6)).toString();
             els.feedback.style.opacity = '0';
             
             // Show solution below the equation
             els.solutionDisplay.textContent = `= ${displayVal}`;
-            setTimeout(() => {
+            state.solutionTimeout = setTimeout(() => {
                 els.solutionDisplay.classList.add('visible');
             }, 100);
             
@@ -1179,7 +1417,7 @@
             els.input.focus();
             
             // Show solution for ~1.5 seconds, then fade out gracefully
-            setTimeout(() => {
+            state.resolutionTimeout = setTimeout(() => {
                 els.solutionDisplay.classList.remove('visible');
                 // Show new problem immediately as solution starts fading
                 nextQuestion(true); // Pass flag to preserve focus
@@ -1189,6 +1427,10 @@
         // --- Fractal Render ---
         function renderStreak() {
             const s = state.streak;
+            writeStored('etude_streak', s);
+            writeStored('etude_best', state.best);
+            els.streakBest.hidden = state.best <= 0;
+            els.streakBest.textContent = state.best > 0 ? `Best ${state.best}` : '';
             
             // Toggle Visibility of Entire Wrapper
             if (s > 0) {
@@ -1239,7 +1481,7 @@
 
         function setStreakMode(mode) {
             activeConfig.streakMode = mode;
-            localStorage.setItem('etude_config', JSON.stringify(activeConfig));
+            writeStored('etude_config', activeConfig);
             updateStreakDropdown();
             renderStreak();
             closeStreakDropdown();
@@ -1293,7 +1535,7 @@
 
         // Handle Enter/Submit action
         function handleEnterSubmit() {
-            if (!state.currentQuestion || state.transitioning) return;
+            if (!state.currentQuestion || state.resolving || state.transitioning || modalIsOpen()) return;
 
             let val = els.input.value.replace(',', '.');
             let numVal = parseFloat(val);
@@ -1305,8 +1547,6 @@
                 els.mobileEnterBtn.classList.remove('visible');
             }
 
-            // Prevent input during transition
-            state.transitioning = true;
             els.input.value = '';
 
             const correct = state.currentQuestion.answer;
@@ -1318,6 +1558,37 @@
                 handleFailure(correct);
             }
         }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (els.blitzTerminateModal.classList.contains('open')) {
+                    closeBlitzTerminateModal();
+                } else if (els.modal.classList.contains('open')) {
+                    toggleMenu();
+                } else if (els.streakDropdown.classList.contains('open')) {
+                    closeStreakDropdown();
+                }
+                refocusInput();
+                e.preventDefault();
+                return;
+            }
+            if (window.matchMedia('(min-width: 769px)').matches && !modalIsOpen() &&
+                !e.ctrlKey && !e.metaKey && !e.altKey && !e.isComposing &&
+                document.activeElement !== els.input && !els.input.disabled &&
+                (/^[0-9.,-]$/.test(e.key) || e.key === 'Backspace')) {
+                els.input.focus();
+                e.preventDefault();
+                if (state.resolving || state.transitioning) return;
+                const start = els.input.selectionStart ?? els.input.value.length;
+                const end = els.input.selectionEnd ?? start;
+                if (e.key === 'Backspace') {
+                    els.input.setRangeText('', start === end ? Math.max(0, start - 1) : start, end, 'end');
+                } else if (els.input.value.length - (end - start) < els.input.maxLength) {
+                    els.input.setRangeText(e.key, start, end, 'end');
+                }
+                checkInput();
+            }
+        });
 
         // --- Initialization ---
         els.input.addEventListener('input', checkInput);
@@ -1336,12 +1607,14 @@
         window.onload = () => {
             initMenu();
             updateStreakDropdown();
+            renderStreak();
             nextQuestion();
             setTimeout(() => {
-                if (!els.modal.classList.contains('open')) els.input.focus();
+                refocusInput();
             }, 100);
             document.addEventListener('dblclick', (e) => e.preventDefault(), { passive: false });
         };
+        if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
     </script>
 </body>
 </html>
